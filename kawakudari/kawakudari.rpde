@@ -20,22 +20,23 @@ draw <- function() {
       scroll(std15)
       if(scr(std15,x,5) != 0) running <- FALSE 
     }
-    pAppletDraw(std15)
+    draw_screen(std15)
   }
 }
 
 
 
 
-CHAR_SX <- 8
-CHAR_SY <- 8
+char_w <- 8
+char_h <- 8
 
-Std15 <- function(screen_sx, screen_sy, cb_sx, cb_sy) {
+Std15 <- function(screen_w, screen_h, buff_w, buff_h) {
   self <- new.env(parent = globalenv())
-  self$cb_sx <- cb_sx
-  self$cb_sy <- cb_sy
-  self$cb_unit <- screen_sx / cb_sx / CHAR_SX
-  length(self$charBuff) <- cb_sx * cb_sy
+  self$buff_w <- buff_w
+  self$buff_h <- buff_h
+  self$dot_w <- screen_w / buff_w / char_w
+  self$dot_h <- screen_h / buff_h / char_h
+  length(self$buff) <- buff_w * buff_h
   self$cursor_x <- 0
   self$cursor_y <- 0
   class(self) <- "Std15"
@@ -48,63 +49,63 @@ locate.Std15 <- function(self, x, y) {
   self$cursor_y <- y
 }
 
-putcLoc.Std15 <- function(self, x, y, c) {
-  self$charBuff[y*self$cb_sx+x +1] <- c
-}
-
 putc.Std15 <- function(self, c) {
-  putcLoc.Std15(self,self$cursor_x,self$cursor_y,c)
+  set_char.Std15(self,self$cursor_x,self$cursor_y,c)
 }
 
 scr.Std15 <- function(self, x, y) {
-  return(self$charBuff[y*self$cb_sx+x +1])
+  return(self$buff[y*self$buff_w+x +1])
 }
 
 cls.Std15 <- function(self) {
-  for(y in 0:(self$cb_sy-1)){
-    for(x in 0:(self$cb_sx-1)){
-      self$charBuff[y*self$cb_sx+x +1] <- 0
+  for(y in 0:(self$buff_h-1)){
+    for(x in 0:(self$buff_w-1)){
+      set_char.Std15(self,x,y,0)
     }
   }
 }
 
 
 scroll.Std15 <- function(self) {
-  for(y in 0:(self$cb_sy-1)){
-    for(x in 0:(self$cb_sx-1)){
-      if (y == (self$cb_sy-1)) {
-        self$charBuff[y*self$cb_sx+x +1] <- 0
+  for(y in 0:(self$buff_h-1)){
+    for(x in 0:(self$buff_w-1)){
+      if (y == (self$buff_h-1)) {
+        set_char.Std15(self,x,y,0)
       } else {
-        self$charBuff[y*self$cb_sx+x +1] <- self$charBuff[(y+1)*self$cb_sx+x +1]
+        set_char.Std15(self,x,y,scr.Std15(self,x,y+1))
       }
     }
   }
 }
 
-mapchar.Std15 <- function(self, cx, cy, c) {
-  glyph <- FONT[c+1]
+set_char.Std15 <- function(self, x, y, c) {
+  self$buff[y*self$buff_w+x +1] <- c
+}
+
+draw_char.Std15 <- function(self, cx, cy, c) {
+  glyph <- ichigojam_font[c+1]
   if(glyph != 0x0) {
-    for(y in 0:(CHAR_SY-1)){
-      line <- (glyph%/%(2^(CHAR_SX*(CHAR_SY-y-1)))) %% 0x100
-      for(x in 0:(CHAR_SX-1)){
-        n <- ((line%/%(2^(CHAR_SX-x-1))) %% 0x2) == 0x1
+    for(y in 0:(char_h-1)){
+      line <- (glyph%/%(2^(char_w*(char_h-y-1)))) %% 0x100
+      for(x in 0:(char_w-1)){
+        n <- ((line%/%(2^(char_w-x-1))) %% 0x2) == 0x1
         if(n) {
-          x0 <- (cx*CHAR_SX+x) * self$cb_unit
-          y0 <- (cy*CHAR_SY+y) * self$cb_unit
-          rect(x0, y0, self$cb_unit, self$cb_unit)
+          x0 <- (cx*char_w+x) * self$dot_w
+          y0 <- (cy*char_h+y) * self$dot_h
+          fill(0xff)
+          noStroke()
+          rect(x0, y0, self$dot_w, self$dot_h)
         }
       }
     }
   }
 }
 
-pAppletDraw.Std15 <- function(self) {
+draw_screen.Std15 <- function(self) {
   background(0x00)
-  fill(0xff)
-  noStroke()
-  for(y in 0:(self$cb_sy-1)){
-    for(x in 0:(self$cb_sx-1)){
-      mapchar.Std15(self,x,y,self$charBuff[y*self$cb_sx+x +1])
+  for(y in 0:(self$buff_h-1)){
+    for(x in 0:(self$buff_w-1)){
+      draw_char.Std15(self,x,y,scr.Std15(self,x,y))
     }
   }
 }
@@ -129,13 +130,18 @@ scroll <- function(self, ...) {
   UseMethod("scroll")
 }
 
-pAppletDraw <- function(self, ...) {
-  UseMethod("pAppletDraw")
+draw_screen <- function(self, ...) {
+  UseMethod("draw_screen")
 }
 
 
-
-FONT <- c(
+#
+#
+# CC BY IchigoJam & mitsuji.org
+# https://mitsuji.github.io/ichigojam-font.json/
+#
+#
+ichigojam_font <- c(
     0x0000000000000000,
     0xffffffffffffffff,
     0xffaaff55ffaaff55,
