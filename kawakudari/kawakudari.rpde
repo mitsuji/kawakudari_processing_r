@@ -1,6 +1,6 @@
 
 settings <- function() {
-  size(512, 384 + 30)
+  size(512, 384)
   std15 <- Std15(512,384,32,24)
   x <- 15
   running <- TRUE
@@ -52,10 +52,38 @@ Std15 <- function(screen_w, screen_h, buff_w, buff_h) {
   self$font <- list()
   i <- 1
   for(glyph in ichigojam_font){
-    self$font[[i]] <- c(strtoi(substring(glyph,1,4),16)
-                        ,strtoi(substring(glyph,5,8),16)
-                        ,strtoi(substring(glyph,9,12),16)
-                        ,strtoi(substring(glyph,13),16))
+    hi_bits1 <- strtoi(substring(glyph,1,1),16)
+    hi_bits2 <- strtoi(substring(glyph,2,8),16)
+    lo_bits1 <- strtoi(substring(glyph,9,9),16)
+    lo_bits2 <- strtoi(substring(glyph,10),16)
+
+    if(hi_bits1 > 0x7) {
+      hi_bits1_1 <- 1
+      hi_bits1 <- hi_bits1 - 0x8
+    } else {
+      hi_bits1_1 <- 0
+    }
+    hi_bits <- (hi_bits1 * (2^28)) + hi_bits2
+
+    if(lo_bits1 > 0x7) {
+      lo_bits1_1 <- 1
+      lo_bits1 <- lo_bits1 - 0x8
+    } else {
+      lo_bits1_1 <- 0
+    }
+    lo_bits <- (lo_bits1 * (2^28)) + lo_bits2
+
+    bits <- list()
+    bits [[1]] <- hi_bits1_1
+    for (j in 2:32){
+      bits [[j]] <- ((hi_bits %/% (2^(32-j))) %% 2) == 1
+    }
+    bits [[33]] <- lo_bits1_1
+    for (j in 34:64){
+      bits [[j]] <- ((lo_bits %/% (2^(64-j))) %% 2) == 1
+    }
+
+    self$font[[i]] <- bits
     i <- i+1
   }
 
@@ -154,40 +182,18 @@ set_char.Std15 <- function(self, x, y, c) {
   self$buff[y*self$buff_w+x +1] <- c
 }
 
-draw_line.Std15 <- function(self, cx, cy, y, line) {
-  for(x in 0:(char_w-1)){
-    if(((line%/%(2^(char_w-x-1))) %% 0x2) == 0x1) {
-      x0 <- (cx*char_w+x) * self$dot_w
-      y0 <- (cy*char_h+y) * self$dot_h
-      fill(0xff)
-      noStroke()
-      rect(x0, y0, self$dot_w, self$dot_h)
-    }
-  }
-}
-
 draw_char.Std15 <- function(self, cx, cy, c) {
-  glyph <- self$font[[c+1]]
-  for(y in 0:(char_h-1)){
-    if (glyph[1] != 0 && y < 2) {
-      line <- (glyph[1]%/%(2^(char_w*(char_h-y-1-6)))) %% 0x100
-      if(line != 0) {
-        draw_line.Std15(self,cx,cy,y,line)
-      }
-    } else if(glyph[2] != 0 && y < 4) {
-      line <- (glyph[2]%/%(2^(char_w*(char_h-y-1-4)))) %% 0x100
-      if(line != 0) {
-        draw_line.Std15(self,cx,cy,y,line)
-      }
-    } else if(glyph[3] != 0 && y < 6) {
-      line <- (glyph[3]%/%(2^(char_w*(char_h-y-1-2)))) %% 0x100
-      if(line != 0) {
-        draw_line.Std15(self,cx,cy,y,line)
-      }
-    } else if(glyph[4] != 0) {
-      line <- (glyph[4]%/%(2^(char_w*(char_h-y-1)))) %% 0x100
-      if(line !=0) {
-        draw_line.Std15(self,cx,cy,y,line)
+  if( c != 0 ) {
+    glyph <- self$font[[c+1]]
+    for(y in 0:(char_h-1)){
+      for(x in 0:(char_w-1)){
+        if(glyph[[(y*char_w+x) +1]]){
+          x0 <- (cx*char_w+x) * self$dot_w
+          y0 <- (cy*char_h+y) * self$dot_h
+          fill(0xff)
+          noStroke()
+          rect(x0, y0, self$dot_w, self$dot_h)
+        }
       }
     }
   }
