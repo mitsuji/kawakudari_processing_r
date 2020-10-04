@@ -21,6 +21,7 @@ draw <- function() {
       if(scr(std15,x,5) != 0) {
         locate(std15,0,23)
         putstr(std15,"Game Over...")
+        putnum(std15,frameCount)
         running <- FALSE
       }
     }
@@ -81,6 +82,10 @@ putstr.Std15 <- function(self, s) {
   for (c in s_split) {
     putc.Std15(self,charToRaw(c))
   }
+}
+
+putnum.Std15 <- function(self, n) {
+  putstr.Std15(self,strtoi(n))
 }
 
 scr.Std15 <- function(self, x, y) {
@@ -170,6 +175,10 @@ putc <- function(self, ...) {
 
 putstr <- function(self, ...) {
   UseMethod("putstr")
+}
+
+putnum <- function(self, ...) {
+  UseMethod("putnum")
 }
 
 scr <- function(self, ...) {
