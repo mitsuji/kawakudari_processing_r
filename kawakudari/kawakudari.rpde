@@ -73,14 +73,14 @@ Std15 <- function(screen_w, screen_h, buff_w, buff_h) {
     }
     lo_bits <- (lo_bits1 * (2^28)) + lo_bits2
 
-    bits <- list()
-    bits [[1]] <- hi_bits1_1
+    bits <- c()
+    bits [1] <- hi_bits1_1; bits
     for (j in 2:32){
-      bits [[j]] <- ((hi_bits %/% (2^(32-j))) %% 2) == 1
+      bits [j] <- ((hi_bits %/% (2^(32-j))) %% 2) == 1; bits
     }
-    bits [[33]] <- lo_bits1_1
+    bits [33] <- lo_bits1_1; bits
     for (j in 34:64){
-      bits [[j]] <- ((lo_bits %/% (2^(64-j))) %% 2) == 1
+      bits [j] <- ((lo_bits %/% (2^(64-j))) %% 2) == 1; bits
     }
 
     self$font[[i]] <- bits
@@ -187,7 +187,7 @@ draw_char.Std15 <- function(self, cx, cy, c) {
     glyph <- self$font[[c+1]]
     for(y in 0:(char_h-1)){
       for(x in 0:(char_w-1)){
-        if(glyph[[(y*char_w+x) +1]]){
+        if(glyph[(y*char_w+x) +1]){
           x0 <- (cx*char_w+x) * self$dot_w
           y0 <- (cy*char_h+y) * self$dot_h
           fill(0xff)
