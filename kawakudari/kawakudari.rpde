@@ -18,7 +18,12 @@ draw <- function() {
       locate(std15,random(32),23)
       putc(std15,charToRaw("*"))
       scroll(std15)
-      if(scr(std15,x,5) != 0) running <- FALSE 
+      if(scr(std15,x,5) != 0) {
+        locate(std15,0,23)
+        putstr(std15,"Game Over...")
+        putnum(std15,frameCount)
+        running <- FALSE
+      }
     }
     draw_screen(std15)
   }
@@ -62,6 +67,25 @@ locate.Std15 <- function(self, x, y) {
 
 putc.Std15 <- function(self, c) {
   set_char.Std15(self,self$cursor_x,self$cursor_y,c)
+  if(self$cursor_x < (self$buff_w -1)) {
+    self$cursor_x <- self$cursor_x +1
+  } else {
+    if(self$cursor_y < (self$buff_h -1)) {
+      self$cursor_x <- 0
+      self$cursor_y <- self$cursor_y +1
+    }
+  }
+}
+
+putstr.Std15 <- function(self, s) {
+  s_split <- strsplit(s, "")[[1]]
+  for (c in s_split) {
+    putc.Std15(self,charToRaw(c))
+  }
+}
+
+putnum.Std15 <- function(self, n) {
+  putstr.Std15(self,strtoi(n))
 }
 
 scr.Std15 <- function(self, x, y) {
@@ -147,6 +171,14 @@ locate <- function(self, ...) {
 
 putc <- function(self, ...) {
   UseMethod("putc")
+}
+
+putstr <- function(self, ...) {
+  UseMethod("putstr")
+}
+
+putnum <- function(self, ...) {
+  UseMethod("putnum")
 }
 
 scr <- function(self, ...) {
