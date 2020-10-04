@@ -137,6 +137,19 @@ scroll.Std15 <- function(self, dir) {
   }
 }
 
+pset.Std15 <- function(self, x, y) {
+  cx <- x %/% 2
+  cy <- y %/% 2
+  c <- scr.Std15(self,cx,cy)
+  b <- 2 ^ (((y %% 2)*2) + (x %% 2)) # 1, 2, 4, 8
+  if ((c %/% 0x10) == 0x8) {
+    d <- ifelse(((c %/% b) %% 2) == 0, c+b, c)
+  } else {
+    d <- 0x80 + b
+  }
+  set_char.Std15(self,cx,cy,d)
+}
+
 set_char.Std15 <- function(self, x, y, c) {
   self$buff[y*self$buff_w+x +1] <- c
 }
@@ -215,6 +228,10 @@ cls <- function(self, ...) {
 
 scroll <- function(self, ...) {
   UseMethod("scroll")
+}
+
+pset <- function(self, ...) {
+  UseMethod("pset")
 }
 
 draw_screen <- function(self, ...) {
