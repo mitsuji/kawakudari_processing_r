@@ -5,7 +5,7 @@ This project implements part of the [std15.h](https://github.com/IchigoJam/c4ij/
 It will allow programming for [IchigoJam](https://ichigojam.net/index-en.html)-like targets that display [IchigoJam FONT](https://mitsuji.github.io/ichigojam-font.json/) on screen using a R-like programming language.
 ```
 settings <- function() {
-  size(512, 384 + 30)
+  size(512, 384)
   std15 <- Std15(512,384,32,24)
   x <- 15
   running <- TRUE
